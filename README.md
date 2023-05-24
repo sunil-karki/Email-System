@@ -4,7 +4,9 @@ System that handles a large number of email requests
 
 ### Design for the system
 _To be added here_
+![alt text](https://github.com/sunil-karki/Email-System/blob/main/Design_diagram.png)
 
+_Link:_ https://github.com/sunil-karki/Email-System/blob/main/Design_diagram.png
 
 ### Starting the Services for Email System
 
