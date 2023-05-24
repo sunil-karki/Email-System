@@ -24,11 +24,12 @@ def send_email_request1(producer, email_from, email_to, message, subject, templa
     producer.flush()
 
 
-def send_email_request2(producer, email_from, email_to, message):
+def send_email_request2(producer, email_from, email_to, start_time, end_time):
     email_request = {
         'emailFrom': email_from,
         'emailTo': email_to,
-        'message': message
+        'startTime': start_time,
+        'endTime': end_time
     }
     producer.send(email_requests_topic2, value=email_request)
     print("producer.send2")
@@ -98,7 +99,9 @@ def run():
 
     # Request 2: Get email details
     email_address = "test2@gmail.com"
-    send_email_request2(producer2, "", email_address, "")
+    start_time_mail = "2022-08-15"
+    start_end_mail = ""
+    send_email_request2(producer2, "", email_address, start_time_mail, start_end_mail)
     get_email_details_response2(consumer2)
     print("Response fetched from second topic")
 

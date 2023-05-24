@@ -1,12 +1,22 @@
+"""
+## Consumer Service 2 -
+## Consumer service to handle request to query emails based on the parameters provided.
+##
+"""
+
+import json
+import pprint
+
 from kafka import KafkaConsumer, KafkaProducer
 from pymongo import MongoClient
 from json import dumps
-import pprint
+from bson import json_util
+from datetime import datetime
 
 # Kafka configuration
 bootstrap_servers = 'localhost:9092'
-email_requests_topic = 'email_requests'
-email_responses_topic = 'email_responses'
+email_requests_topic = 'email_requestsecond'
+email_responses_topic = 'email_responsesecond'
 
 # MongoDB configuration
 mongodb_host = 'localhost'
@@ -15,57 +25,85 @@ mongodb_database = 'email_db'
 mongodb_collection = 'emails'
 
 
-def process_email_requests(consumer, producer):
+# Create query for MongoDB for email recordsQuery email details from MongoDB
+def createQueryForDatabase(email_to, start_time, end_time):
+    query = {}
+
+    if not (email_to is None or email_to == ""):
+        query["emailto"] = email_to
+
+    if not ((start_time is None or start_time == "") and (end_time is None or end_time == "")):
+        query['emailtimestamp'] = {}
+        if not (start_time is None or start_time == ""):
+            query['emailtimestamp']['$gte'] = datetime.strptime(start_time, '%Y-%m-%d')
+
+        if not (end_time is None or end_time == ""):
+            query['emailtimestamp']['$lte'] = datetime.strptime(end_time, '%Y-%m-%d')
+
+    return query
+
+
+# Function to query records of Emails.
+def queryEmailRecord(email_request):
+    # MongoDB details
     client = MongoClient("mongodb://" + mongodb_host + ":" + str(mongodb_port))
     db = client[mongodb_database]
     collection = db[mongodb_collection]
 
-    for message in consumer:
-        email_request = message.value.decode('utf-8')  # Decode the message value
-        email_request = eval(email_request)  # Convert the string representation to a dictionary
-        email_to = email_request['emailTo']
-        print("Request for: " + email_to)
+    # Request provided by the producer
+    email_to = email_request['emailTo']
+    start_time = email_request['startTime']  # Starting Time Range to query
+    end_time = email_request['endTime']  # Ending Time Range to query
 
-        # Query email details from MongoDB
-        query = {"emailto": email_to}
-        email_document = collection.find_one(query)
-        pprint.pprint(email_document)
+    print("Request for: " + email_to + " " + start_time + " " + end_time)
+
+    # Create query for request provided by the producer.
+    query = createQueryForDatabase(email_to, start_time, end_time)
+    print("query: " + str(query))
+
+    # Executing query for requests.
+    try:
+        email_document = collection.find(query)
 
         if email_document:
-            print("Record found from the DB..")
-            # for email_doc in email_document:
-            #     print("Record found..." + email_doc)
-            email_from = email_document['emailfrom']
-            message = email_document['emailbody']
-            email_response = {
-                'emailFrom': email_from,
-                'emailTo': email_to,
-                'message': message
-            }
-            # pprint.pprint(email_document['emailFrom'])
-            # email_response = {
-            #     'emailFrom': 'email_from',
-            #     'emailTo': 'email_to',
-            #     'message': 'message'
-            # }
-            producer.send(email_responses_topic, value=email_response)  # Encode the response as bytes
-
+            # pprint.pprint(email_document)
+            return json.loads(json_util.dumps(email_document))
         else:
-            print("Record NOT found...")
-            email_response = {
-                'error': 'Email not found.'
-            }
-            producer.send(email_responses_topic, value=email_response)  # Encode the response as bytes
+            print("Email not found")
+            email_response = "{'msg': 'Email not found.'}"
+            return json.loads(email_response)
 
-        producer.flush()
+    except Exception as e:
+        print("Failed to the Query Database!!")
+        raise Exception("Failed to the Query Database!! " + str(e))
+
+
+# Function to process queries/request from the producer.
+def processProducerRequests(consumer, producer):
+    print("Processing email requests to query emails ...")
+
+    for message in consumer:
+        email_request = message.value.decode('utf-8')  # Decode the message value
+        email_request = eval(email_request)  # Convert the string to a dictionary
+
+        try:
+            list_of_emails = queryEmailRecord(email_request)
+
+            # for email_response in list_of_emails['records']:
+            pprint.pprint(list_of_emails)
+            producer.send(email_responses_topic, value=list_of_emails)
+            producer.flush()
+
+        except Exception as e:
+            print(str(e))
 
 
 def run():
     consumer = KafkaConsumer(email_requests_topic, bootstrap_servers=bootstrap_servers)
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+    producer = KafkaProducer(bootstrap_servers=bootstrap_servers,
                              value_serializer=lambda x:
                              dumps(x).encode('utf-8'))
-    process_email_requests(consumer, producer)
+    processProducerRequests(consumer, producer)
 
 
 if __name__ == '__main__':
