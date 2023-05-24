@@ -4,6 +4,7 @@ package email;
 
 service EmailService {
   rpc SendEmail (EmailRequest) returns (EmailResponse) {}
+  rpc QueryEmails (EmailQueryRequest) returns (stream EmailResponse) {}
 }
 
 message EmailRequest {
@@ -16,4 +17,10 @@ message EmailRequest {
 message EmailResponse {
   bool success = 1;
   string message = 2;
+}
+
+message EmailQueryRequest {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  string email_address = 3;
 }
