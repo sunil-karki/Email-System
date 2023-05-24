@@ -1,0 +1,17 @@
+# Base image
+FROM python:3.9.7
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the script file
+COPY apiGateway.py .
+
+# Install dependencies
+RUN pip install kafka-python
+
+# Set Kafka broker host
+ENV KAFKA_BROKER_HOST=192.168.1.74
+
+# Run the script
+CMD ["python", "apiGateway.py"]

@@ -16,6 +16,7 @@ from json import loads
 
 
 # Kafka configuration
+# bootstrap_servers=['localhost:9092']
 bootstrap_servers = 'localhost:9092'
 email_requests_topic1 = 'email_requests'
 email_responses_topic1 = 'email_responses'
@@ -26,6 +27,7 @@ email_responses_topic2 = 'email_responsesecond'
 app = Flask(__name__)
 
 
+# Function to send email send request to consumers
 def send_email_request1(producer, email_from, email_to, message, subject, template_flag):
     email_request = {
         'emailFrom': email_from,
@@ -41,12 +43,35 @@ def send_email_request1(producer, email_from, email_to, message, subject, templa
     producer.flush()
 
 
+# Function to send request to query email records to the consumers
+def send_email_request2(producer, email_from, email_to, start_time, end_time):
+    email_request = {
+        'emailFrom': email_from,
+        'emailTo': email_to,
+        'startTime': start_time,
+        'endTime': end_time
+    }
+    producer.send(email_requests_topic2, value=email_request)
+    print("producer.send2")
+    producer.flush()
+
+
+# Function to get response from consumers regarding email sent
 def get_email_details_response1(consumer):
     print("-" + str(consumer))
     # print("-" + str(consumer["acknowledgement"]))
     for message in consumer:
         print("---")
         email_response = message.value.decode('utf-8')
+        # email_response = message.value.decode('utf-8')
+        # email_response = eval(email_response)
+        print(email_response)
+
+
+# Function to get response from consumers regarding the query on email records
+def get_email_details_response2(consumer):
+    for message in consumer:
+        email_response = message.value
         # email_response = message.value.decode('utf-8')
         # email_response = eval(email_response)
         print(email_response)
@@ -63,10 +88,10 @@ def produce_message1():
     email_subject = data.get('subject')
     template_flag = data.get('templateFlag')
 
-    producer1 = KafkaProducer(bootstrap_servers=['localhost:9092'],
+    producer1 = KafkaProducer(bootstrap_servers=bootstrap_servers,
                               value_serializer=lambda x:
                               dumps(x).encode('utf-8'))
-    consumer1 = KafkaConsumer(email_responses_topic1, bootstrap_servers=['localhost:9092'],
+    consumer1 = KafkaConsumer(email_responses_topic1, bootstrap_servers=bootstrap_servers,
                               auto_offset_reset='earliest',
                               enable_auto_commit=True,
                               # group_id='my-group',
@@ -86,16 +111,26 @@ def produce_message2():
     data = request.json
 
     # Extract the necessary information from the request
-    topic = data.get('topic')
-    message = data.get('message')
+    email_address = data.get('emailAddress')
+    start_time_mail = data.get('startTime')
+    start_end_mail = data.get('endTime')
 
-    # Produce the message to Kafka
-    # producer.send(topic, value=message.encode())
-    # producer.flush()
+    producer2 = KafkaProducer(bootstrap_servers=bootstrap_servers,
+                              value_serializer=lambda x:
+                              dumps(x).encode('utf-8'))
+    consumer2 = KafkaConsumer(email_responses_topic2, bootstrap_servers=bootstrap_servers,
+                              auto_offset_reset='earliest',
+                              enable_auto_commit=True,
+                              # group_id='my-group',
+                              value_deserializer=lambda x: loads(x.decode('utf-8'))
+                              )
+
+    send_email_request2(producer2, "", email_address, start_time_mail, start_end_mail)
+    # get_email_details_response2(consumer2)
 
     print("Message for Kafka consumer2.")
 
-    return 'OK\n'
+    return 'Message sent to consumer2'
 
 
 @app.route('/health', methods=['GET'])
