@@ -1,13 +1,19 @@
+"""
+## Consumer Service 1 -
+## Consumer service to send emails based on the email address and template chosen.
+##
+"""
+
+# import time
+# import email.message
+import smtplib
+
 from kafka import KafkaConsumer, KafkaProducer
 from pymongo import MongoClient
 from json import dumps
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-# import time
-# import email.message
-import smtplib
 
 # Kafka configuration
 bootstrap_servers = 'localhost:9092'
