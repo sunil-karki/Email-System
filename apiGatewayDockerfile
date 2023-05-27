@@ -9,9 +9,12 @@ COPY apiGateway.py .
 
 # Install dependencies
 RUN pip install kafka-python
+RUN pip install Flask
+
+EXPOSE 9092
 
 # Set Kafka broker host
-ENV KAFKA_BROKER_HOST=192.168.1.74
+#ENV KAFKA_BROKER_HOST=192.168.1.74
 
-# Run the script
-CMD ["python", "apiGateway.py"]
+# Run the script (Add IP Address of the machine/container  and  port where kafka is hosted)
+CMD ["python", "apiGateway.py", "192.168.1.74", "9092"]

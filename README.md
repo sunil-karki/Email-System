@@ -2,7 +2,7 @@
 System that handles a large number of email requests
 
 
-### Design for the system
+### Design diagram for the system
 _To be added here_
 
 
@@ -75,10 +75,19 @@ Follow these steps to start the three services:
 
 4. **Start the Producer Service**
 
-   Run the following command to start the producer service:
+   Run the following command to start the producer service: _(You can skip this if to run in Docker)_
 
    ```shell
    python apiGateway.py
+    ```
+   
+   **_To run it on Docker, execute the following two commands:_**
+   ```shell
+   docker build -t api-gateway -f apiGatewayDockerfile .
+    ```
+   Then,
+      ```shell
+   docker run --name api-gateway-container -d -p 8000:8000 api-gateway
     ```
    
 5. **Interact with the Services**
