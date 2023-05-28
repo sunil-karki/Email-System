@@ -53,7 +53,7 @@ Follow these steps to start the three services:
    ```
    _This will pull image file of the MongoDB database_
 
-    Then, run the container
+    Then, run the container _(27017 is port for MongoDB)_
     
    ```shell
    docker run --name mongodb -p 27017:27017 mongo
@@ -61,27 +61,38 @@ Follow these steps to start the three services:
     
 3. **Start the Consumer Service**
 
-   Run the following command to start the consumer service (consumer 1):
+   Run the following command to start the EmailService (consumer 1): _(You can skip this if to run in Docker)_
 
    ```shell
    python kafkaServerService.py
     ```
    
-    Run the following command to start the next consumer service (consumer 2):
+    Run the following command to start the next consumer service (consumer 2): _(You can skip this if to run in Docker)_
 
    ```shell
    python kafkaDBService.py
     ```
+   
+   **_To run it on Docker, execute the following two commands:_** <br> **Note:** In _serverServiceDockerfile_, add IP address/port where kafka server runs and also IP address/port for MongoDB.
+
+   ```shell
+   docker build -t email-service -f serverServiceDockerfile .
+    ```
+   
+   ```shell
+   docker run --name email-service-container2 -d email-service
+    ```
 
 4. **Start the Producer Service**
 
-   Run the following command to start the producer service: _(You can skip this if to run in Docker)_
+   Run the following command to start the ApiGateway service (producer): _(You can skip this if to run in Docker)_
 
    ```shell
    python apiGateway.py
     ```
    
-   **_To run it on Docker, execute the following two commands:_**
+   **_To run it on Docker, execute the following two commands:_** <br> **Note:** In _apiGatewayDockerfile_, add IP address/port where kafka server runs.
+
    ```shell
    docker build -t api-gateway -f apiGatewayDockerfile .
     ```
