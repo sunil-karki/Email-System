@@ -31,34 +31,36 @@ Follow these steps to start the three services:
 
 1. **Start Kafka**
 
-   Start your Kafka server by running the appropriate command based on your installation. This typically involves starting the ZooKeeper server and then starting the Kafka broker. You can refer to the Kafka documentation for detailed setup.
-
+   Start your Kafka server by running the appropriate command based on your installation. This typically involves starting the ZooKeeper server and then starting the Kafka broker. You can refer to the Kafka documentation for detailed setup.<br>
+   <br>
    After the setup, start the ZooKeeper for Kafka
    ```shell
    .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
    ```
-   _This will pull image file of the MongoDB database_
+   <br>
 
    Start the Kafka broker
    ```shell
    .\bin\windows\kafka-server-start.bat .\config\server.properties
    ```
+   <br>
 
 2. **Set Up MongoDB Database**
 
-   In your preferred terminal or command prompt
+   In your preferred terminal or command prompt:
    
     ```shell
    docker pull mongo
    ```
    _This will pull image file of the MongoDB database_
-
-    Then, run the container _(27017 is port for MongoDB)_
+   <br><br>
+   Then, run the container _(27017 is port for MongoDB)_
     
    ```shell
-   docker run --name mongodb -p 27017:27017 mongo
+   docker run --name mongodb -d -p 27017:27017 mongo
     ```
-    
+   <br>
+   
 3. **Start the Consumer Service**
 
    Run the following command to start the EmailService (consumer 1): _(You can skip this if to run in Docker)_
@@ -72,8 +74,13 @@ Follow these steps to start the three services:
    ```shell
    python kafkaDBService.py
     ```
-   
-   **_To run it on Docker, execute the following two commands:_** <br> **Note:** In _serverServiceDockerfile_, add IP address/port where kafka server runs and also IP address/port for MongoDB.
+   <br>
+
+   **_To run it on Docker, execute the following four commands below:_** <br> 
+   **Note:** In files _'serverServiceDockerfile'_ and _'dbServiceDockerfile'_, add IP address/port 
+   where kafka server runs and also IP address/port for MongoDB. IP address could be found with _ipconfig_ 
+   or _ifconfig_. <br><br>
+   For EmailService (consumer 1):
 
    ```shell
    docker build -t email-service -f serverServiceDockerfile .
@@ -82,6 +89,17 @@ Follow these steps to start the three services:
    ```shell
    docker run --name email-service-container2 -d email-service
     ```
+   
+   Then, for DBService (consumer 2):
+   
+   ```shell
+   docker build -t db-service -f dbServiceDockerfile .
+    ```
+   
+   ```shell
+   docker run --name db-service-container3 -d db-service
+    ```
+   <br>
 
 4. **Start the Producer Service**
 
@@ -90,6 +108,7 @@ Follow these steps to start the three services:
    ```shell
    python apiGateway.py
     ```
+   <br>
    
    **_To run it on Docker, execute the following two commands:_** <br> **Note:** In _apiGatewayDockerfile_, add IP address/port where kafka server runs.
 
@@ -100,6 +119,7 @@ Follow these steps to start the three services:
       ```shell
    docker run --name api-gateway-container -d -p 8000:8000 api-gateway
     ```
+   <br>
    
 5. **Interact with the Services**
    
@@ -108,7 +128,7 @@ Follow these steps to start the three services:
    curl --header "Content-Type: application/json" --request POST --data "{\"emailFrom\": \"tese320@gmail.com\", \"emailTo\": \"test1@gmail.com\", \"message\": \"Message from gateway\", \"subject\": \"apigateway.\", \"templateFlag\": \"1\"}"  http://localhost:8000/sendMail
    ```
 
-   Run the following command to query the email records:
+   Run the following command to query the email records/documents:
    ```shell
    curl --header "Content-Type: application/json" --request POST --data "{\"emailAddress\": \"tese320@gmail.com\", \"startTime\": \"2022-08-15\", \"endTime\": \"2022-10-15\"}" http://localhost:8000/queryMail
    ```

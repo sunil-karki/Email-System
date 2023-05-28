@@ -184,7 +184,7 @@ if __name__ == '__main__':
         run()
 
     except Exception as e:
-        print("Failed to connect to MongoDB:", str(e))
+        print("Failed to connect: ", str(e))
     finally:
         # Close the connection
         client.close()
