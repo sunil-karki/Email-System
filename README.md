@@ -23,10 +23,6 @@ Before you start, ensure that you have the following installed on your system, e
 
 ------------
 
-_**Note**: The services has not been dockerized yet. When it is done, the .md file will be updated._
-
-------------
-
 ### Steps To Follow
 
 Follow these steps to start the three services:
