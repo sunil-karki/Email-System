@@ -13,7 +13,7 @@ from flask import Flask, request
 from kafka import KafkaProducer, KafkaConsumer
 from json import dumps
 from json import loads
-
+import sys
 
 # Kafka configuration
 # bootstrap_servers=['localhost:9092']
@@ -25,6 +25,7 @@ email_requests_topic2 = 'email_requestsecond'
 email_responses_topic2 = 'email_responsesecond'
 
 app = Flask(__name__)
+flask_port = 8000
 
 
 # Function to send email send request to consumers
@@ -39,7 +40,7 @@ def send_email_request1(producer, email_from, email_to, message, subject, templa
 
     # Produce the message to Kafka
     producer.send(email_requests_topic1, value=email_request)
-    print("producer.send1")
+    print("message.producer.1.send")
     producer.flush()
 
 
@@ -52,7 +53,7 @@ def send_email_request2(producer, email_from, email_to, start_time, end_time):
         'endTime': end_time
     }
     producer.send(email_requests_topic2, value=email_request)
-    print("producer.send2")
+    print("message.producer.2.send")
     producer.flush()
 
 
@@ -140,4 +141,8 @@ def health_check():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    if len(sys.argv) == 3:
+        bootstrap_servers = sys.argv[1] + ":" + sys.argv[2]
+
+    print("Looking for kafka broker on " + bootstrap_servers)
+    app.run(host='0.0.0.0', port=flask_port)
